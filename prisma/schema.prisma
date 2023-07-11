@@ -1,0 +1,487 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model State {
+  id         Int       @id @default(autoincrement())
+  name       String
+  uf         String
+  created_at DateTime  @default(now())
+  Cities     City[]
+  Company    Company[]
+
+  @@map("states")
+}
+
+model City {
+  id       Int       @id @default(autoincrement())
+  state_id Int
+  name     String
+  States   State     @relation(fields: [state_id], references: [id])
+  Company  Company[]
+  Team     Team[]
+
+  @@map("cities")
+}
+
+model User {
+  id                String     @id @default(uuid())
+  name              String
+  email             String?    @unique
+  username          String     @unique
+  password_hash     String
+  is_admin          Boolean    @default(false)
+  Team              Team?      @relation(fields: [sel_team_id], references: [id])
+  sel_team_id       String?
+  CupConfig         CupConfig? @relation(fields: [sel_cup_config_id], references: [id])
+  sel_cup_config_id String?
+  Category          Category?  @relation(fields: [sel_category_id], references: [id])
+  sel_category_id   String?
+
+  deleted        Boolean          @default(false)
+  created_at     DateTime         @default(now())
+  updated_at     DateTime         @updatedAt
+  CompanyUser    CompanyUser[]
+  GameDetail     GameDetail[]
+  UserTeam       UserTeam[]
+  UserToken      UserToken[]
+  UserRole       UserRole[]
+  UserPermission UserPermission[]
+
+  @@map("users")
+}
+
+model Company {
+  id          String        @id @default(uuid())
+  name        String
+  cnpj        String?
+  phone       String?
+  email       String        @unique
+  address     String?
+  deleted     Boolean       @default(false)
+  created_at  DateTime      @default(now())
+  updated_at  DateTime      @updatedAt
+  city_id     Int
+  state_id    Int
+  Cities      City          @relation(fields: [city_id], references: [id])
+  States      State         @relation(fields: [state_id], references: [id])
+  CompanyUser CompanyUser[]
+  Cups        Cup[]
+
+  @@map("companies")
+}
+
+model CompanyUser {
+  id         String   @id @default(uuid())
+  company_id String
+  user_id    String
+  deleted    Boolean  @default(false)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  Companies  Company  @relation(fields: [company_id], references: [id])
+  Users      User     @relation(fields: [user_id], references: [id])
+
+  @@map("company_user")
+}
+
+model Cup {
+  id         String      @id @default(uuid())
+  Company    Company     @relation(fields: [company_id], references: [id])
+  company_id String
+  sub_domain String      @unique
+  name       String
+  deleted    Boolean     @default(false)
+  created_at DateTime    @default(now())
+  updated_at DateTime    @updatedAt
+  CupConfig  CupConfig[]
+  Game       Game[]
+
+  @@map("cups")
+}
+
+model CupConfig {
+  id                    String     @id @default(uuid())
+  cup_id                String
+  name                  String?
+  start_date            DateTime   @db.Date
+  end_date              DateTime   @db.Date
+  amount_players        Int
+  registration_deadline DateTime?  @db.Date
+  active                Boolean    @default(false)
+  deleted               Boolean    @default(false)
+  created_at            DateTime   @default(now())
+  updated_at            DateTime   @updatedAt
+  regulation            String
+  Card                  CardType[]
+  Categories            Category[]
+  Cups                  Cup        @relation(fields: [cup_id], references: [id])
+  Games                 Game[]
+  User                  User[]
+
+  @@map("cup_config")
+}
+
+model CardType {
+  id                     String                   @id @default(uuid())
+  CupConfig              CupConfig                @relation(fields: [cup_config_id], references: [id])
+  cup_config_id          String
+  name                   String
+  points                 Int
+  deleted                Boolean                  @default(false)
+  created_at             DateTime                 @default(now())
+  updated_at             DateTime                 @updatedAt
+  Card                   Card[]
+  TechnicalCommitteeCard TechnicalCommitteeCard[]
+
+  @@map("card_types")
+}
+
+model Category {
+  id                             String                           @id @default(uuid())
+  CupConfig                      CupConfig                        @relation(fields: [cup_config_id], references: [id])
+  cup_config_id                  String
+  name                           String
+  amount_teams                   Int
+  amount_groups                  Int
+  amount_next_phase              Int
+  deleted                        Boolean                          @default(false)
+  created_at                     DateTime                         @default(now())
+  updated_at                     DateTime                         @updatedAt
+  CategoryPlayer                 CategoryPlayerTeam[]
+  Game                           Game[]
+  Group                          Group[]
+  CategoryTeam                   CategoryTeam[]
+  User                           User[]
+  CategoryTeamTechnicalCommittee CategoryTeamTechnicalCommittee[]
+
+  @@map("categories")
+}
+
+model CategoryTeam {
+  Category    Category @relation(fields: [category_id], references: [id])
+  category_id String
+  Team        Team     @relation(fields: [team_id], references: [id])
+  team_id     String
+
+  @@id([category_id, team_id])
+  @@map("category_team")
+}
+
+model Group {
+  id          String      @id @default(uuid())
+  category_id String
+  name        String
+  deleted     Boolean     @default(false)
+  created_at  DateTime    @default(now())
+  updated_at  DateTime    @updatedAt
+  Game        Game[]
+  GroupTeam   GroupTeam[]
+  Categories  Category    @relation(fields: [category_id], references: [id])
+
+  @@map("groups")
+}
+
+model Team {
+  id                             String                           @id @default(uuid())
+  name                           String
+  code                           String?
+  responsible                    String
+  phone                          String?
+  email                          String?
+  foundation_date                DateTime?                        @db.Date
+  deleted                        Boolean                          @default(false)
+  created_at                     DateTime                         @default(now())
+  updated_at                     DateTime                         @updatedAt
+  city_id                        Int
+  image                          String?
+  CategoryPlayerTeam             CategoryPlayerTeam[]
+  GroupTeam                      GroupTeam[]
+  UserTeam                       UserTeam[]
+  Cities                         City                             @relation(fields: [city_id], references: [id])
+  CategoryTeam                   CategoryTeam[]
+  User                           User[]
+  CategoryTeamTechnicalCommittee CategoryTeamTechnicalCommittee[]
+
+  @@map("teams")
+}
+
+model UserTeam {
+  id         String   @id @default(uuid())
+  team_id    String
+  user_id    String
+  deleted    Boolean  @default(false)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  Teams      Team     @relation(fields: [team_id], references: [id])
+  Users      User     @relation(fields: [user_id], references: [id])
+
+  @@map("team_user")
+}
+
+model GroupTeam {
+  id         String   @id @default(uuid())
+  group_id   String
+  team_id    String
+  deleted    Boolean  @default(false)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  Groups     Group    @relation(fields: [group_id], references: [id])
+  Teams      Team     @relation(fields: [team_id], references: [id])
+
+  @@map("group_team")
+}
+
+model Player {
+  id             String               @id @default(uuid())
+  name           String
+  nickname       String?
+  date_birth     DateTime?            @db.Date
+  document       String               @unique
+  phone          String?
+  deleted        Boolean              @default(false)
+  created_at     DateTime             @default(now())
+  updated_at     DateTime             @updatedAt
+  Card           Card[]
+  CategoryPlayer CategoryPlayerTeam[]
+  Goal           Goal[]
+  PlayerNumber   PlayerNumber[]
+
+  @@map("players")
+}
+
+model CategoryPlayerTeam {
+  id          String   @id @default(uuid())
+  category_id String
+  team_id     String
+  player_id   String
+  avatar      String?
+  active      Boolean  @default(false)
+  deleted     Boolean  @default(false)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  Categories  Category @relation(fields: [category_id], references: [id])
+  Players     Player   @relation(fields: [player_id], references: [id])
+  Teams       Team     @relation(fields: [team_id], references: [id])
+
+  @@map("category_player_team")
+}
+
+model Game {
+  id                     String                   @id @default(uuid())
+  date                   DateTime
+  deleted                Boolean                  @default(false)
+  created_at             DateTime                 @default(now())
+  updated_at             DateTime                 @updatedAt
+  category_id            String
+  cup_config_id          String
+  group_id               String
+  team_a                 String
+  team_b                 String
+  Card                   Card[]
+  GameDetail             GameDetail[]
+  CupsConfig             CupConfig                @relation(fields: [cup_config_id], references: [id])
+  Categories             Category                 @relation(fields: [category_id], references: [id])
+  Groups                 Group                    @relation(fields: [group_id], references: [id])
+  Goal                   Goal[]
+  Cup                    Cup?                     @relation(fields: [cupId], references: [id])
+  cupId                  String?
+  TechnicalCommitteeCard TechnicalCommitteeCard[]
+  PlayerNumber           PlayerNumber[]
+
+  @@map("games")
+}
+
+model GameDetail {
+  id                  String    @id @default(uuid())
+  game_id             String
+  user_id             String
+  first_period_start  DateTime? @db.Time()
+  first_period_end    DateTime? @db.Time()
+  second_period_start DateTime? @db.Time()
+  second_period_end   DateTime? @db.Time()
+  extra_period_start  DateTime? @db.Time()
+  extra_period_end    DateTime? @db.Time()
+  obs                 String?
+  published           Boolean   @default(false)
+  created_at          DateTime  @default(now())
+  updated_at          DateTime  @updatedAt
+  deleted             Boolean   @default(false)
+  Games               Game      @relation(fields: [game_id], references: [id])
+  Users               User      @relation(fields: [user_id], references: [id])
+
+  @@map("game_details")
+}
+
+model Goal {
+  id         String   @id @default(uuid())
+  game_id    String
+  player_id  String
+  time       DateTime @db.Time(6)
+  deleted    Boolean  @default(false)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  Games      Game     @relation(fields: [game_id], references: [id])
+  Players    Player   @relation(fields: [player_id], references: [id])
+
+  @@map("goals")
+}
+
+model Card {
+  id           String   @id @default(uuid())
+  game_id      String
+  card_type_id String
+  player_id    String
+  deleted      Boolean  @default(false)
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+  time         DateTime @db.Time(6)
+  CardTypes    CardType @relation(fields: [card_type_id], references: [id])
+  Games        Game     @relation(fields: [game_id], references: [id])
+  Players      Player   @relation(fields: [player_id], references: [id])
+
+  @@map("cards")
+}
+
+model UserToken {
+  id            String   @id @default(uuid())
+  refresh_token String
+  user          User     @relation(fields: [user_id], references: [id])
+  user_id       String
+  expires_date  DateTime @db.Timestamp()
+  created_at    DateTime @default(now())
+
+  @@map("users_tokens")
+}
+
+model Permission {
+  id             String           @id @default(uuid())
+  name           String
+  description    String?
+  created_at     DateTime         @default(now())
+  updated_at     DateTime         @default(now()) @updatedAt
+  PermissionRole PermissionRole[]
+  UserPermission UserPermission[]
+
+  @@map("permissions")
+}
+
+model Role {
+  id             String           @id @default(uuid())
+  name           String
+  description    String?
+  created_at     DateTime         @default(now())
+  updated_at     DateTime         @default(now()) @updatedAt
+  PermissionRole PermissionRole[]
+  UserRole       UserRole[]
+
+  @@map("roles")
+}
+
+model PermissionRole {
+  Permission    Permission @relation(fields: [permission_id], references: [id])
+  permission_id String
+  Role          Role       @relation(fields: [role_id], references: [id])
+  role_id       String
+
+  @@id([permission_id, role_id])
+  @@map("permissions_roles")
+}
+
+model UserRole {
+  User    User   @relation(fields: [user_id], references: [id])
+  user_id String
+  Role    Role   @relation(fields: [role_id], references: [id])
+  role_id String
+
+  @@id([user_id, role_id])
+  @@map("users_roles")
+}
+
+model UserPermission {
+  Permission    Permission @relation(fields: [permission_id], references: [id])
+  permission_id String
+  User          User       @relation(fields: [user_id], references: [id])
+  user_id       String
+
+  @@id([permission_id, user_id])
+  @@map("users_permissions")
+}
+
+model TechnicalCommitteeTypes {
+  id                             String                           @id @default(uuid())
+  name                           String
+  deleted                        Boolean                          @default(false)
+  created_at                     DateTime                         @default(now())
+  updated_at                     DateTime                         @default(now()) @updatedAt
+  CategoryTeamTechnicalCommittee CategoryTeamTechnicalCommittee[]
+
+  @@map("technical_committee_types")
+}
+
+model TechnicalCommittee {
+  id                             String                           @id @default(uuid())
+  name                           String
+  phone                          String?
+  document                       String
+  attachment                     String?
+  deleted                        Boolean                          @default(false)
+  created_at                     DateTime                         @default(now())
+  updated_at                     DateTime                         @default(now()) @updatedAt
+  CategoryTeamTechnicalCommittee CategoryTeamTechnicalCommittee[]
+  TechnicalCommitteeCard         TechnicalCommitteeCard[]
+
+  @@map("technical_committee")
+}
+
+model CategoryTeamTechnicalCommittee {
+  id                          String                  @id @default(uuid())
+  categoryId                  Category                @relation(fields: [category_id], references: [id])
+  category_id                 String
+  teamId                      Team                    @relation(fields: [team_id], references: [id])
+  team_id                     String
+  TechnicalCommittee          TechnicalCommittee      @relation(fields: [technical_committee_id], references: [id])
+  technical_committee_id      String
+  TechnicalCommitteeTypes     TechnicalCommitteeTypes @relation(fields: [technical_committee_type_id], references: [id])
+  technical_committee_type_id String
+  avatar                      String?
+  deleted                     Boolean                 @default(false)
+  created_at                  DateTime                @default(now())
+  updated_at                  DateTime                @default(now()) @updatedAt
+
+  @@map("category_team_technical_committee")
+}
+
+model TechnicalCommitteeCard {
+  id                      String             @id @default(uuid())
+  TechnicalCommittee      TechnicalCommittee @relation(fields: [techcnical_committee_id], references: [id])
+  techcnical_committee_id String
+  Game                    Game               @relation(fields: [game_id], references: [id])
+  game_id                 String
+  CardType                CardType           @relation(fields: [card_type_id], references: [id])
+  card_type_id            String
+  time                    DateTime           @db.Time(6)
+  deleted                 Boolean            @default(false)
+  created_at              DateTime           @default(now())
+  updated_at              DateTime           @updatedAt
+
+  @@map("technical_committee_cards")
+}
+
+model PlayerNumber {
+  id         String   @id @default(uuid())
+  Game       Game     @relation(fields: [game_id], references: [id])
+  game_id    String
+  Player     Player   @relation(fields: [player_id], references: [id])
+  player_id  String
+  number     Int
+  deleted    Boolean  @default(false)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("player_number")
+}
