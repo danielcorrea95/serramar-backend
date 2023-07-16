@@ -5,7 +5,7 @@ export async function GetCategoryWithTeamsToSiteByCupConfigIdController(
   request: FastifyRequest,
   reply: FastifyReply,
 ) {
-  const cupConfigId = '98ce87e1-e285-494c-8e3a-95a467302cf6'
+  const cupConfigId = 'fd1ce94d-4cf8-483d-ac63-5b35bc8a9ae9'
 
   const getCategoryWithTeamsToSiteByCupConfigIdUseCase =
     MakeGetCategoryWithTeamsToSiteByCupConfigIdUseCase()
