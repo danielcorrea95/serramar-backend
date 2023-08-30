@@ -102,7 +102,7 @@ export class PrismaCategoryPlayerTeamRepository
       await prisma.$queryRaw`SELECT p.id, p.name, p.nickname, p.date_birth, cpt.avatar 
     FROM players AS p
     LEFT JOIN category_player_team AS cpt ON cpt.player_id = p.id
-    WHERE cpt.team_id = ${teamId} AND cpt.category_id = ${categoryId}
+    WHERE cpt.team_id = ${teamId} AND cpt.category_id = ${categoryId} AND cpt.delete = false
     GROUP BY p.id, cpt.avatar
     `
 
