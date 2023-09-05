@@ -23,6 +23,8 @@ import { UploadImageTechnicalCommitteeController } from './categoryTeamTechnical
 import { GetLinkIdByCategoryIdPlayerIdTeamIdController } from './categoryPlayerTeam/GetLinkIdByCategoryIdPlayerIdTeamIdController'
 import { GetCategoryWithTeamsToSiteByCupConfigIdController } from './categoryTeam/GetCategoryWithTeamsByCupConfigIdController'
 import { GetPlayerByCategoryIdAndTeamIdToSiteController } from './categoryPlayerTeam/GetPlayerByCategoryIdAndTeamIdToSiteController'
+import { ListCategoryByCupConfigIdController } from './category/ListCategoryByCupConfigIdController'
+import { GetGroupsByCategoryIdController } from './group/GetGoupsByCategoryIdController'
 
 export async function cupRoutes(app: FastifyInstance) {
   const upload = multer(uploadConfig)
@@ -143,4 +145,10 @@ export async function cupRoutes(app: FastifyInstance) {
     '/players/to-site/category-id/team-id/:categoryId/:teamId',
     GetPlayerByCategoryIdAndTeamIdToSiteController,
   )
+
+  // get category by cup config id
+  app.get('/categories/:cupConfigId', ListCategoryByCupConfigIdController)
+
+  // get groups by category id
+  app.get('/groups/:categoryId', GetGroupsByCategoryIdController)
 }

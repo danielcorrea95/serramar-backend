@@ -51,7 +51,6 @@ export class PrismaCategoryPlayerTeamRepository
       where: {
         category_id: categoryId,
         player_id: playerId,
-        active: true,
         NOT: {
           team_id: teamId,
         },

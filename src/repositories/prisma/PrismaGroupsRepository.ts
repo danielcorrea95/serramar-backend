@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { Prisma } from '@prisma/client'
+import { Group, Prisma } from '@prisma/client'
 import { GroupsRepository } from '../GroupsRepository'
 
 export class PrismaGroupsRepository implements GroupsRepository {
@@ -9,5 +9,15 @@ export class PrismaGroupsRepository implements GroupsRepository {
     })
 
     return group
+  }
+
+  async findByCategoryId(categoryId: string): Promise<Group[]> {
+    const groups = await prisma.group.findMany({
+      where: {
+        category_id: categoryId,
+      },
+    })
+
+    return groups
   }
 }
